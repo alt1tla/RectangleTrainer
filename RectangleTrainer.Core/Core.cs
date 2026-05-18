@@ -41,7 +41,7 @@ public class App : IApp
         double a = _rnd.Next(1, max), b = _rnd.Next(1, max);
 
         Rectangle rect = Settings.MeasureMode == MeasurementMode.ByPoints
-            ? Rectangle.FromPoints(_rnd.Next(-10, 10), _rnd.Next(-10, 10), _rnd.Next(1, 20), _rnd.Next(1, 20))
+            ? Rectangle.FromPoints(_rnd.Next(-max, max), _rnd.Next(-max, max), _rnd.Next(1, max), _rnd.Next(1, max))
             : Rectangle.FromSides(a, b);
 
         bool calcPerimeter = Settings.DefaultCalc == CalcType.Perimeter ? _rnd.Next(0, 2) == 0 : true;
@@ -51,7 +51,7 @@ public class App : IApp
 
         string prompt = Settings.MeasureMode == MeasurementMode.BySides
             ? $"Стороны: A = {rect.A}, B = {rect.B}"
-            : $"Точки: ({rect.X1}, {rect.Y1})  ({rect.X2}, {rect.Y2})";
+            : $"Точки: ({rect.X1}, {rect.Y1}) и ({rect.X2}, {rect.Y2})";
         prompt += $"\nНайдите {readableType}";
 
         _current = new Question(rect, type, prompt, correct);
@@ -63,14 +63,25 @@ public class App : IApp
         if (_current == null) { InfoMessage?.Invoke("Сначала сгенерируйте задание."); return; }
 
         bool isCorrect = Math.Abs(userAnswer - _current.CorrectAnswer) < 0.01;
-        string feedback = isCorrect ? "Верно!" : $"Неверно. Правильный ответ: {_current.CorrectAnswer:F2}";
+        string feedback;
 
         if (Settings.TrainMode == TrainerMode.Learning)
+        {
+            feedback = $"\nФормула: {(_current.Type == CalcType.Perimeter ? "P = 2*(A+B)" : "S = A*B")}";
             if (Settings.MeasureMode == MeasurementMode.ByPoints)
-                feedback += $"\nПеревод точек в стороны: A = |X2-X1|, B = |Y2-Y1|";
-            feedback += $"\nФормула: {(_current.Type == CalcType.Perimeter ? "P = 2*(A+B)" : "S = A*B")}";
+                feedback += $"\nПеревод точек в стороны: A = |X2−X1| = {Math.Abs(_current.Rect.X2 - _current.Rect.X1)}, B = |Y2−Y1| = {Math.Abs(_current.Rect.Y2 - _current.Rect.Y1)}";
+            feedback += $"\nРасчёт: {(_current.Type == CalcType.Perimeter ? $"2*({_current.Rect.A}+{_current.Rect.B})" : $"{_current.Rect.A}*{_current.Rect.B}")} = {_current.CorrectAnswer:F2}";
+            feedback += $"Ответ: {_current.CorrectAnswer:F2}";
+
+            AnswerResult?.Invoke(true, userAnswer, _current.CorrectAnswer, feedback);
+            GenerateQuestion(); 
+            return;
+        }
+        feedback = isCorrect
+            ? "Верно!"
+            : "Неверно. Попробуйте ещё раз.";
 
         AnswerResult?.Invoke(isCorrect, userAnswer, _current.CorrectAnswer, feedback);
-        if (isCorrect || Settings.TrainMode == TrainerMode.Testing) GenerateQuestion();
+        if (isCorrect) GenerateQuestion();
     }
 }
