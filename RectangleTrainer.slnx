@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="RectangleTrainer.Cli/RectangleTrainer.Cli.csproj" />
+  <Project Path="RectangleTrainer.Core/RectangleTrainer.Core.csproj" />
+  <Project Path="RectangleTrainer.WinForms/RectangleTrainer.WinForms.csproj" />
+</Solution>
