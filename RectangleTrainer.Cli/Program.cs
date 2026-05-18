@@ -13,7 +13,7 @@ class Program
         settings.Save(settingsPath);
 
         var engine = new App(settings);
-        engine.QuestionReady += q => Console.WriteLine($"\n📐 {q.Prompt}");
+        engine.QuestionReady += q => Console.WriteLine($"\n{q.Prompt}");
         engine.AnswerResult += (ok, user, correct, msg) =>
         {
             Console.WriteLine(msg);
@@ -31,7 +31,7 @@ class Program
             if (input == "skip") { engine.GenerateQuestion(); }
             else if (input == "help") { PrintHelp(); }
             else if (double.TryParse(input, out double ans)) { engine.CheckAnswer(ans); }
-            else { Console.WriteLine("⚠️ Введите число или команду."); }
+            else { Console.WriteLine("Введите число или команду."); }
             Console.Write("Ответ: ");
         }
     }

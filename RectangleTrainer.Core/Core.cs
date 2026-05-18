@@ -46,12 +46,13 @@ public class App : IApp
 
         bool calcPerimeter = Settings.DefaultCalc == CalcType.Perimeter ? _rnd.Next(0, 2) == 0 : true;
         CalcType type = calcPerimeter ? CalcType.Perimeter : CalcType.Area;
+        string readableType = type == CalcType.Perimeter ? "периметр" : "площадь";
         double correct = type == CalcType.Perimeter ? rect.Perimeter : rect.Area;
 
         string prompt = Settings.MeasureMode == MeasurementMode.BySides
             ? $"Стороны: A = {rect.A}, B = {rect.B}"
-            : $"Точки: ({rect.X1}, {rect.Y1}) → ({rect.X2}, {rect.Y2})";
-        prompt += $"\nНайдите: {type}";
+            : $"Точки: ({rect.X1}, {rect.Y1})  ({rect.X2}, {rect.Y2})";
+        prompt += $"\nНайдите {readableType}";
 
         _current = new Question(rect, type, prompt, correct);
         QuestionReady?.Invoke(_current);
@@ -62,10 +63,12 @@ public class App : IApp
         if (_current == null) { InfoMessage?.Invoke("Сначала сгенерируйте задание."); return; }
 
         bool isCorrect = Math.Abs(userAnswer - _current.CorrectAnswer) < 0.01;
-        string feedback = isCorrect ? "✅ Верно!" : $"❌ Неверно. Правильный ответ: {_current.CorrectAnswer:F2}";
+        string feedback = isCorrect ? "Верно!" : $"Неверно. Правильный ответ: {_current.CorrectAnswer:F2}";
 
         if (Settings.TrainMode == TrainerMode.Learning)
-            feedback += $"\n📖 Формула: {(_current.Type == CalcType.Perimeter ? "P = 2×(A+B)" : "S = A×B")}";
+            if (Settings.MeasureMode == MeasurementMode.ByPoints)
+                feedback += $"\nПеревод точек в стороны: A = |X2-X1|, B = |Y2-Y1|";
+            feedback += $"\nФормула: {(_current.Type == CalcType.Perimeter ? "P = 2*(A+B)" : "S = A*B")}";
 
         AnswerResult?.Invoke(isCorrect, userAnswer, _current.CorrectAnswer, feedback);
         if (isCorrect || Settings.TrainMode == TrainerMode.Testing) GenerateQuestion();
