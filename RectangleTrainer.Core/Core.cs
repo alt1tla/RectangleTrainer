@@ -32,7 +32,6 @@ public class App : IApp
     public void UpdateSettings(AppSettings settings)
     {
         Settings = settings;
-        GenerateQuestion();
     }
 
     public void GenerateQuestion()
@@ -55,6 +54,39 @@ public class App : IApp
         prompt += $"\nНайдите {readableType}";
 
         _current = new Question(rect, type, prompt, correct);
+        QuestionReady?.Invoke(_current);
+    }
+
+    public void GenerateVisualQuestion()
+    {
+        int max = Settings.Difficulty switch
+        {
+            1 => 10,
+            2 => 20,
+            3 => 30,
+            _ => 10
+        };
+
+        bool perimeter = _rnd.Next(0, 2) == 0;
+
+        int a = _rnd.Next(1, max);
+        int b = _rnd.Next(1, max);
+
+        double target = perimeter
+            ? 2 * (a + b)
+            : a * b;
+
+        string readable = perimeter
+            ? "периметром"
+            : "площадью";
+
+        _current = new Question(
+            Rectangle.FromSides(a, b),
+            perimeter ? CalcType.Perimeter : CalcType.Area,
+            $"Постройте прямоугольник с {readable} = {target}",
+            target
+        );
+
         QuestionReady?.Invoke(_current);
     }
 
@@ -83,5 +115,17 @@ public class App : IApp
 
         AnswerResult?.Invoke(isCorrect, userAnswer, _current.CorrectAnswer, feedback);
         if (isCorrect) GenerateQuestion();
+    }
+
+    public bool CheckRectangleAnswer(Rectangle rect)
+    {
+        if (_current == null)
+            return false;
+
+        double value = _current.Type == CalcType.Perimeter
+            ? rect.Perimeter
+            : rect.Area;
+
+        return Math.Abs(value - _current.CorrectAnswer) < 0.01;
     }
 }
